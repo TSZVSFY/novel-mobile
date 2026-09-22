@@ -68,13 +68,26 @@ jobs:
       # Step 7: Add Capacitor Android platform
       # ========================================
       - name: Add Android platform
-        run: npx cap add android || true
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          else
+            echo "android/ directory already exists, skipping cap add"
+          fi
 
       # ========================================
       # Step 8: Sync web assets to native project
       # ========================================
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: |
+          echo "==== Pre-sync debug info ===="
+          ls -la
+          echo "--- dist/ contents ---"
+          ls -la dist/ 2>&1 || echo "dist/ NOT FOUND"
+          echo "--- capacitor config ---"
+          cat capacitor.config.json 2>&1 || cat capacitor.config.ts 2>&1 || echo "No capacitor config found!"
+          echo "==== Running cap sync ===="
+          npx cap sync android
 
       # ========================================
       # Step 9: Build APK
