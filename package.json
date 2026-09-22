@@ -4,9 +4,14 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "vue-cli-service build",
+    "cap:sync": "vue-cli-service build && npx cap sync",
+    "cap:add:android": "npx cap add android",
+    "cap:open:android": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
     "@icon-park/vue-next": "^1.4.2",
     "@varlet/ui": "^3.2.7",
     "axios": "^1.6.8",
@@ -20,6 +25,7 @@
     "vuex": "^4.0.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-router": "~5.0.0",
     "@vue/cli-plugin-vuex": "~5.0.0",

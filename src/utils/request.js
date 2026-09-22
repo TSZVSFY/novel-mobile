@@ -6,7 +6,7 @@ const token = localStorage.getItem('token')
 
 // 创建一个 Axios 实例
 const request = axios.create({
-  baseURL: 'https://novelApi.sanyeex.top/', // 设置基本的 API 地址
+  baseURL: process.env.VUE_APP_API_URL || 'https://novelApi.sanyeex.top/', // 从环境变量读取 API 地址
   timeout: 1000000, // 设置请求超时时间
 });
 

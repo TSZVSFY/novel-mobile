@@ -1,0 +1,109 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Build debug APK (uncheck for release)'
+        type: boolean
+        default: true
+
+jobs:
+  build-apk:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ========================================
+      # Step 1: Checkout code
+      # ========================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ========================================
+      # Step 2: Setup Node.js
+      # ========================================
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # ========================================
+      # Step 3: Install dependencies
+      # ========================================
+      - name: Install npm dependencies
+        run: npm ci || npm install
+
+      # ========================================
+      # Step 4: Build Vue web app
+      # ========================================
+      - name: Build web assets
+        run: npm run build
+        env:
+          VUE_APP_API_URL: ${{ vars.VUE_APP_API_URL || 'https://novel-api.your-domain.com/' }}
+
+      # ========================================
+      # Step 5: Setup Java JDK
+      # ========================================
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ========================================
+      # Step 6: Setup Android SDK
+      # ========================================
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
+
+      # ========================================
+      # Step 7: Add Capacitor Android platform
+      # ========================================
+      - name: Add Android platform
+        run: npx cap add android || true
+
+      # ========================================
+      # Step 8: Sync web assets to native project
+      # ========================================
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      # ========================================
+      # Step 9: Build APK
+      # ========================================
+      - name: Build Debug APK
+        if: ${{ github.event_name == 'push' || inputs.debug == true }}
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Build Release APK
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug == false }}
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      # ========================================
+      # Step 10: Upload APK artifact
+      # ========================================
+      - name: Upload Debug APK
+        if: ${{ github.event_name == 'push' || inputs.debug == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: novel-app-debug
+          path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+
+      - name: Upload Release APK
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug == false }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: novel-app-release
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
